@@ -8,6 +8,6 @@ pydantic
 requests
 python-multipart
 opencv-python
-# torch 
-# torchvision 
-# torchaudio
+torch 
+torchvision 
+torchaudio
