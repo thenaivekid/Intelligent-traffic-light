@@ -67,5 +67,34 @@ def get_detections(image, viz=False):
     return len(vehicles)
 
 
+def get_detections_batch(images, viz=False):
+    """
+    Process a batch of images to detect vehicles.
+
+    Args:
+        images (list): A list of image objects.
+        pipe (callable): Detection pipeline function that supports batch processing and returns detections.
+        viz (bool): Whether to visualize the bounding boxes on the images. Defaults to False.
+
+    Returns:
+        list: A list of integers representing the count of vehicles detected in each image.
+    """
+
+    vehicle_labels = {"car", "truck", "bus", "motorcycle", "bicycle"}
+
+    # Process all images in a batch
+    batch_detections = pipe(images)
+    print(batch_detections)
+    results = []
+    for image, detections in zip(images, batch_detections):
+        vehicles = [d for d in detections if d["label"] in vehicle_labels]
+        print("Number of vehicles detected:", len(vehicles))
+        if viz:
+            draw_bounding_boxes(image, vehicles)
+        results.append(len(vehicles))
+
+    return results
+
+
 if __name__ == "__main__":
-    print(get_detections("../a.jpg", viz=True))
+    print(get_detections(Image.open("a.jpg"), viz=True))

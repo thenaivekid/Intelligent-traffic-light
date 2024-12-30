@@ -19,10 +19,11 @@ from utils import *
 # Global variable for background task
 background_tasks = set()
 
+total_cycle_time = 30
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create background task
     task = asyncio.create_task(update_vehicle_count())
     background_tasks.add(task)
     yield
@@ -43,10 +44,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 traffic_data = {
-    "lights": {"cam1": "green", "cam2": "yellow", "cam3": "red"},
     "num_vehicles": {"cam1": 3, "cam2": 5, "cam3": 7},
 }
+
+
+def allocate_durations(traffic_data, total_time):
+    total_vehicles = sum(traffic_data["num_vehicles"].values())
+    durations = {}
+    for lane, vehicles in traffic_data["num_vehicles"].items():
+        durations[lane] = int((vehicles / total_vehicles) * total_time)
+    return durations
 
 
 async def update_vehicle_count():
@@ -104,4 +113,8 @@ async def update_vehicle_count():
 
 @app.get("/traffic")
 async def get_traffic_data():
+    traffic_data["green_duration"] = allocate_durations(
+        traffic_data, total_cycle_time - 3
+    )
+
     return traffic_data
