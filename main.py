@@ -82,7 +82,7 @@ async def get_traffic_data():
 
 @app.get("/count")
 async def count_vehicles():
-    cam1 = "http://192.168.0.111/capture"
+    cam1 = "http://192.168.0.128/capture"
     response = requests.get(cam1)
 
     if response.status_code == 200:

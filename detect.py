@@ -9,7 +9,7 @@ import time
 
 # Ngrok URL
 # url = "http://192.168.0.101/capture"
-url = "http://192.168.0.100/capture"
+url = "http://192.168.0.128/capture"
 
 # Continuously fetch and display the image
 try:

@@ -49,9 +49,9 @@ const char *password = "sm12345678";
 //## for webserver 
 
 WebServer server(85);
-const int redLight = 12;
-const int yellowLight = 14;
-const int greenLight = 13;
+const int redLight = 4;
+const int yellowLight = 2;
+const int greenLight = 15;
 
 void handleRoot() {
   // HTML page for controlling the traffic lights
