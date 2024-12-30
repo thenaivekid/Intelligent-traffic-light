@@ -1,0 +1,13 @@
+Pillow
+matplotlib
+transformers
+numpy
+fastapi
+uvicorn
+pydantic
+requests
+python-multipart
+opencv-python
+torch 
+torchvision 
+torchaudio

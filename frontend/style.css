@@ -1,0 +1,14 @@
+.leaflet-popup-content {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.traffic-light-icon {
+    display: flex;
+    flex-direction: column;
+}
+
+.traffic-light-icon div {
+    margin: 5px;
+}
