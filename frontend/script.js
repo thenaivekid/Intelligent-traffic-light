@@ -7,55 +7,63 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
 }).addTo(map);
 
-// Define lanes
-const lanes = [
-  { name: 'North Lane', lat: 27.677097, lng: 85.316301 },
-  // { name: 'South Lane', lat: 27.6840, lng: 85.3188 },
-  // { name: 'East Lane', lat: 27.6845, lng: 85.3192 },
-  // { name: 'West Lane', lat: 27.6845, lng: 85.3184 }
-];
+// Define camera locations with their IDs
+const cameraLocations = {
+  cam1: { name: 'Patan', lat: 27.677079, lng: 85.316386 },
+  cam2: { name: 'Kupandol', lat: 27.677414, lng: 85.316343 },
+  cam3: { name: 'Jaulakhel', lat: 27.676861, lng: 85.316115 }
+};
 
-// Fetch vehicle count for a lane (dummy data)
-async function getLaneVehicleCount(lat, lng) {
-  // Simulated API response - replace with real API call if necessary
-  const vehicleCount = Math.floor(Math.random() * 50); // Random vehicle count
-  let signalColor;
-
-  if (vehicleCount < 10) {
-    signalColor = 'green';
-  } else if (vehicleCount < 30) {
-    signalColor = 'yellow';
-  } else {
-    signalColor = 'red';
+// Fetch traffic data from the API
+async function getTrafficData() {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/traffic');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching traffic data:', error);
+    return null;
   }
-
-  return { vehicleCount, signalColor };
 }
 
+// Define a map to keep track of markers
+const markers = {};
 
+// Display camera locations with traffic light indicators
+async function displayTrafficStatus() {
+  const trafficData = await getTrafficData();
 
-// Display lane counts with traffic light indicators
-async function displayLaneCounts() {
-  for (const lane of lanes) {
-    const { vehicleCount, signalColor } = await getLaneVehicleCount(lane.lat, lane.lng);
+  if (!trafficData) {
+    console.error('Failed to fetch traffic data');
+    return;
+  }
 
-    // Custom traffic light icon (only one light is bright)
+  // Add or update markers for each camera
+  for (const [camId, location] of Object.entries(cameraLocations)) {
+    const signalColor = trafficData.lights[camId];
+    const vehicleCount = trafficData.num_vehicles[camId];
+
+    // Custom traffic light icon
     const trafficLightIconCustom = L.divIcon({
       className: 'traffic-light-icon',
       html: `
-        <div style="display: flex; flex-direction: column;">
-          <div style="background-color: ${signalColor}; width: 20px; height: 20px; border-radius: 50%;"></div>
-        </div>
+        <div style="background-color: ${signalColor}; width: 20px; height: 20px; border-radius: 50%;"></div>
       `,
-      iconSize: [30, 30] // Icon size
+      iconSize: [30, 30]
     });
 
-    // Add marker with the custom traffic light
-    L.marker([lane.lat, lane.lng], { icon: trafficLightIconCustom })
-      .addTo(map)
-      .bindPopup(`${vehicleCount} vehicles`)
-      .openPopup()
-      
+    if (markers[camId]) {
+      // Update existing marker
+      markers[camId].setIcon(trafficLightIconCustom).setPopupContent(`${location.name}: ${vehicleCount} vehicles`);
+    } else {
+      // Create a new marker
+      const marker = L.marker([location.lat, location.lng], { icon: trafficLightIconCustom })
+        .addTo(map)
+        .bindPopup(`${location.name}: ${vehicleCount} vehicles`);
+      markers[camId] = marker;
+    }
   }
 }
 
@@ -67,11 +75,12 @@ const popupStyle = `
     box-shadow: none;
   }
   .leaflet-popup-content {
-    color: blue; /* Adjust text color */
-    font-size: 20px; /* Adjust text size */
+    color: blue;
+    font-size: 20px;
+    font-weight: bold;
   }
   .leaflet-popup-tip-container {
-    display: none; /* Hide the popup arrow */
+    display: none;
   }
 `;
 
@@ -81,6 +90,6 @@ styleSheet.type = "text/css";
 styleSheet.innerText = popupStyle;
 document.head.appendChild(styleSheet);
 
-// Display counts initially and update dynamically
-displayLaneCounts();
-setInterval(displayLaneCounts, 10000); // Refresh every 10 seconds
+// Display status initially and update every second
+displayTrafficStatus();
+setInterval(displayTrafficStatus, 1000); // Refresh every 1 second
