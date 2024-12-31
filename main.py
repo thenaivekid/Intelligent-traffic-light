@@ -17,16 +17,22 @@ import aiohttp
 from contextlib import asynccontextmanager
 from utils import *
 
-cam1 = "http://192.168.0.128"
-cam2 = "http://192.168.0.128"
-cam3 = "http://192.168.0.128"
+cam1 = "http://192.168.137.203"
+cam2 = "http://192.168.137.191"
+# cam3 = "http://192.168.137.22"
 
 # Global variable for background task
 
 traffic_data = {
-    "num_vehicles": {"cam1": 3, "cam2": 5, "cam3": 7},
-    "green_duration": {"cam1": 14, "cam2": 9, "cam3": 4},
-    "camera_urls": {"cam1": cam1, "cam2": cam2, "cam3": cam3},
+    "num_vehicles": {"cam1": 3, "cam2": 5, 
+                    #  "cam3": 7
+                     },
+    "green_duration": {"cam1": 14, "cam2": 9, 
+                    #    "cam3": 4
+                       },
+    "camera_urls": {"cam1": cam1, "cam2": cam2,
+                    # "cam3": cam3
+                    },
 }
 
 
@@ -74,15 +80,17 @@ async def update_vehicle_count():
         try:
             images = []
             for cam in traffic_data["camera_urls"]:
-                response = requests.get(f"{cam}/capture")
+                print(f"{traffic_data['camera_urls'][cam]}/capture")
+                response = requests.get(f"{traffic_data['camera_urls'][cam]}/capture")
+
 
                 if response.status_code == 200:
-                    print("Captured pic {cam}")
+                    print(f"Captured pic {cam}")
                     img_array = np.array(bytearray(response.content), dtype=np.uint8)
                     frame = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     image = Image.fromarray(frame_rgb)
-                    images.append(images)
+                    images.append(image)
                 else:
                     print("Failed to fetch the image")
 
@@ -110,10 +118,18 @@ async def update_vehicle_count():
                 #         os.unlink(temp_path)
 
                 num_vehicles = get_detections_batch(images, viz=False)
-                global traffic_data
-                for i, cam in enumerate(traffic_data["num_vehicles"]):
-                    traffic_data["num_vehicles"][cam] = num_vehicles[i]
-                print(num_vehicles, "vehicles detected")
+                # print(num_vehicles, "main")
+                # global traffic_datas``
+                try:
+                    for i, cam in enumerate(traffic_data["num_vehicles"]):
+                        traffic_data["num_vehicles"][cam] = num_vehicles[i]
+                except IndexError as e:
+                    print(f"IndexError: {e}")
+                    print(f"num_vehicles: {num_vehicles}")
+                    print(f"traffic_data['num_vehicles']: {traffic_data['num_vehicles']}")
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+
             except:
                 print("could not count")
 
@@ -134,14 +150,14 @@ async def update_ligth():
                 camera_url = traffic_data_copy["camera_urls"][cam]
 
                 # Turn the current camera light GREEN
-                await session.get(f"{camera_url}/GREEN")
+                await session.get(f"{camera_url}:85/GREEN")
                 print(f"{cam}: GREEN light ON")
 
                 # Turn other cameras' lights RED
                 for other_cam in traffic_data_copy["camera_urls"]:
                     if other_cam != cam:
                         other_camera_url = traffic_data_copy["camera_urls"][other_cam]
-                        await session.get(f"{other_camera_url}/RED")
+                        await session.get(f"{other_camera_url}:85/RED")
                         print(f"{other_cam}: RED light ON")
 
                 # Wait for the green duration of the current camera
@@ -149,7 +165,7 @@ async def update_ligth():
                 await asyncio.sleep(green_duration)
 
                 # Turn the current camera light YELLOW
-                await session.get(f"{camera_url}/YELLOW")
+                await session.get(f"{camera_url}:85/YELLOW")
                 print(f"{cam}: YELLOW light ON")
 
                 # Wait for 1 second before the next cycle

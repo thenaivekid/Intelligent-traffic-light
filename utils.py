@@ -84,7 +84,8 @@ def get_detections_batch(images, viz=False):
 
     # Process all images in a batch
     batch_detections = pipe(images)
-    print(batch_detections)
+    # print("detections", batch_detections)
+    # print(batch_detections)
     results = []
     for image, detections in zip(images, batch_detections):
         vehicles = [d for d in detections if d["label"] in vehicle_labels]
